@@ -1,0 +1,52 @@
+body {
+  font-family: "Comic Sans MS", cursive, sans-serif;
+  background: #ffe6f0;
+  color: #ff1a75;
+  text-align: center;
+}
+
+h1, h2 {
+  text-shadow: 2px 2px #ffb3d9;
+}
+
+button {
+  background-color: #ff66b2;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 1rem;
+}
+
+button:hover {
+  background-color: #ff3399;
+}
+
+input {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 2px solid #ff99cc;
+}
+
+.logout {
+  background-color: #ffb3d9;
+  margin-bottom: 1rem;
+}
+
+.appointment-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.appointment-list li {
+  background-color: #ffe6f0;
+  margin: 0.5rem auto;
+  padding: 0.5rem 1rem;
+  width: 300px;
+  border: 2px solid #ff99cc;
+  border-radius: 15px;
+}
