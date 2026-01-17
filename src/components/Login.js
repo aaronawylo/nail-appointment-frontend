@@ -1,10 +1,14 @@
-import { login } from "../auth";
+import React from 'react';
+import { login } from '../auth';
 
-export default function Login() {
-  return (
-    <div className="login">
-      <h2>💖 Please log in 💖</h2>
-      <button onClick={login}>Login with Cognito 🌸</button>
-    </div>
-  );
-}
+const Login = () => {
+    return (
+        <div className="container">
+            <h1>💅 Nail Appointment</h1>
+            <p>Please log in to book an appointment</p>
+            <button onClick={login}>Login</button>
+        </div>
+    );
+};
+
+export default Login;

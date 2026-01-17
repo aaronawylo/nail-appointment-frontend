@@ -1,34 +1,25 @@
-const apiUrl = process.env.REACT_APP_API_URL;
+console.log('API URL:', process.env.REACT_APP_API_URL);
+const API_URL = process.env.REACT_APP_API_URL;
 
-// Get appointments
-export async function getAppointments(token) {
-  const response = await fetch(`${apiUrl}/appointments`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
+export async function createAppointment(appointmentTime) {
+    const token = localStorage.getItem('id_token');
+    const response = await fetch(`${API_URL}/appointments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({ appointmentTime })
+    });
+    return await response.json();
 }
 
-// Create appointment
-export async function createAppointment(appointmentTime, token) {
-  const response = await fetch(`${apiUrl}/appointments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ appointmentTime }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
+export async function getAppointments() {
+    const token = localStorage.getItem('id_token');
+    const response = await fetch(`${API_URL}/appointments`, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : ''
+        }
+    });
+    return response.json();
 }
