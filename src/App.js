@@ -1,86 +1,101 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import AppointmentForm from './components/AppointmentForm';
 import AppointmentList from './components/AppointmentList';
 import Login from './components/Login';
-import { handleRedirect, isAuthenticated } from './auth'; // Import your auth helpers
+import AdminDashboard from './components/AdminDashboard';
+import { handleRedirect, isAuthenticated, isAdmin } from './auth';
+import { getAppointments } from './api';
+import NailGallery from './components/NailGallery';
 import './styles.css';
-
-const API_URL = process.env.REACT_APP_API_URL;
 
 const App = () => {
   const [appointments, setAppointments] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [loadingAppointments, setLoadingAppointments] = useState(false);
-
-  const fetchAppointments = async () => {
-    const token = localStorage.getItem('id_token'); 
-    if (!token) return;
-
-    setLoadingAppointments(true);
-    try {
-      const response = await fetch(`${API_URL}/appointments`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
-        },
-      });
-
-      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-
-      const data = await response.json();
-      // Ensure we set an empty array if data.appointments is missing
-      setAppointments(data.appointments || []);
-    } catch (err) {
-      console.error('Failed to fetch appointments:', err);
-    } finally {
-      setLoadingAppointments(false);
-    }
-  };
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
-    const initAuth = async () => {
-      // 1. Check if we just arrived back from Cognito with a ?code=...
-      const codeExchanged = await handleRedirect();
-      
-      // 2. Check if we are logged in (either just now or from a previous session)
-      if (codeExchanged || isAuthenticated()) {
-        setLoggedIn(true);
-        fetchAppointments();
-      }
-    };
+      const initAuth = async () => {
+        const codeExchanged = await handleRedirect();
+        
+        if (codeExchanged || isAuthenticated()) {
+          try {
+            setLoggedIn(true);
+            setUserIsAdmin(isAdmin());
+            
+            // Load data
+            const data = await getAppointments();
+            setAppointments(data.appointments || []);
+          } catch (err) {
+            if (err.message === "UNAUTHORIZED") {
+              setLoggedIn(false); // Force back to login screen
+            } else {
+              console.error("Failed to load appointments:", err);
+            }
+          }
+        }
+      };
+      initAuth();
+    }, []);
 
-    initAuth();
-  }, []);
+  if (!loggedIn) return <Login setLoggedIn={setLoggedIn} />;
+
+  const handleLogout = () => {
+    localStorage.removeItem('id_token');
+    setLoggedIn(false);
+    setUserIsAdmin(false);
+    window.location.href = "/";
+  };
 
   return (
-    <div className="app-container">
-      {!loggedIn ? (
-        <Login setLoggedIn={setLoggedIn} />
-      ) : (
-        <>
-          <h1>💅 Nail Appointment Scheduler</h1>
-          
-          <AppointmentForm
-            onNewAppointment={(appt) => {
-              // Only add to state if the object has the required 'appointmentTime' property
-              if (appt && appt.appointmentTime) {
-                setAppointments((prev) => [...prev, appt]);
-              } else {
-                // If the response is malformed, refresh the whole list from DynamoDB
-                fetchAppointments();
-              }
-            }}
-          />
+    <Router>
+      <div className="app-container">
+        {/* Banner / Navbar */}
+        <nav className="navbar">
+          <div className="nav-logo">🌸 Nail Magic</div>
+          <div className="nav-links">
+            <Link to="/" className="nav-link">Home</Link>
+            <Link to="/gallery" className="nav-link">Gallery</Link>
+            <Link to="/schedule" className="nav-link">Book Now</Link>
+            <Link to="/my-appointments" className="nav-link">My Bookings</Link>
+            {userIsAdmin && <Link to="/admin" className="nav-link admin-link">Admin View 👑</Link>}
+            
+            {/* The Logout Button */}
+            <button onClick={handleLogout} className="logout-button">Logout</button>
+          </div>
+        </nav>
 
-          {loadingAppointments ? (
-            <div className="spinner">
-              <p>Loading your appointments...</p>
+        <Routes>
+          <Route path="/" element={
+            <div className="home-page">
+              <h1>Welcome to the Salon 🌺</h1>
+              <p>Experience the magic of beautiful nails.</p>
+              <Link to="/schedule"><button>Start Booking</button></Link>
             </div>
-          ) : (
+          } />
+          
+          <Route path="/gallery" element={<NailGallery />} />
+
+          <Route path="/schedule" element={
+            <AppointmentForm onNewAppointment={(appt) => setAppointments([...appointments, appt])} />
+          } />
+
+          <Route path="/my-appointments" element={
             <AppointmentList appointments={appointments} />
+          } />
+
+          {userIsAdmin && (
+            <Route path="/admin" element={
+              <div className="admin-page">
+                <h1>Admin Dashboard 👑</h1>
+                <p>All client appointments across the salon appear here.</p>
+                <AdminDashboard /> {/* <--- Add the component here */}
+              </div>
+            } />
           )}
-        </>
-      )}
-    </div>
+        </Routes>
+      </div>
+    </Router>
   );
 };
 

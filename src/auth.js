@@ -10,7 +10,7 @@ export const login = () => {
 export const logout = () => {
   const logoutUrl = `https://${COGNITO_DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${encodeURIComponent(REDIRECT_URI)}`;
   localStorage.removeItem('id_token');
-  localStorage.removeItem('access_token'); // Clean up both
+  localStorage.removeItem('access_token');
   window.location.href = logoutUrl;
 };
 
@@ -62,3 +62,18 @@ export const handleRedirect = async () => {
 };
 
 export const isAuthenticated = () => !!localStorage.getItem('id_token');
+
+export const getUserGroups = () => {
+  const token = localStorage.getItem('id_token');
+  if (!token) return [];
+  try {
+    // JWTs are [Header].[Payload].[Signature]
+    const payload = token.split('.')[1]; 
+    const decoded = JSON.parse(atob(payload));
+    return decoded['cognito:groups'] || [];
+  } catch (e) {
+    return [];
+  }
+};
+
+export const isAdmin = () => getUserGroups().includes('admin');
