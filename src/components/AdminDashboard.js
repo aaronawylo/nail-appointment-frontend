@@ -1,80 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import { getAllAppointments } from '../api';
+import { getAllAppointments, deleteAppointment } from '../api';
 
 const AdminDashboard = () => {
   const [allAppts, setAllAppts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     getAllAppointments()
       .then(data => setAllAppts(data.appointments || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
+  const handleDelete = async (userId, time) => {
+    if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
     try {
-      // 1. Get the Pre-signed URL from your API
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/admin/get-upload-url`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('id_token')}` 
-        },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type })
-      });
-      
-      const { uploadUrl } = await res.json();
-
-      // 2. Upload directly to S3 using the URL
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type }
-      });
-
-      alert("Photo uploaded successfully! ✨");
+      await deleteAppointment(userId, time);
+      alert("Appointment removed.");
+      loadData();
     } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Failed to upload photo.");
-    } finally {
-      setUploading(false);
+      alert("Delete failed: " + err.message);
     }
   };
 
   return (
-    <div className="admin-container">
-      <h2>Admin Control Panel 👑</h2>
-
-      {/* NEW UPLOAD SECTION */}
-      <div className="admin-upload-card" style={{ marginBottom: '2rem', padding: '1rem', border: '1px dashed #ccc' }}>
-        <h3>Add to Gallery ✨</h3>
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={handleUpload} 
-          disabled={uploading}
-        />
-        {uploading && <p>Uploading your masterpiece...</p>}
-      </div>
-
-      <hr />
-
-      <h2>Master Schedule</h2>
-      {loading ? <p>Loading all bookings...</p> : (
-        <div className="admin-list">
+    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto', fontFamily: 'Arial' }}>
+      <h2 style={{ borderBottom: '2px solid #333', paddingBottom: '10px' }}>Admin Master Schedule 👑</h2>
+      
+      {loading ? <p>Loading schedule...</p> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {allAppts.length === 0 ? <p>No bookings found.</p> : (
             allAppts.map((appt, index) => (
-              <div key={index} className="appointment-item admin-item">
-                <div className="admin-details">
-                  <strong>User:</strong> {appt.userId.split('-')[0]}... <br/>
-                  <strong>Time:</strong> {new Date(appt.appointmentTime).toLocaleString()}
+              <div key={index} style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                padding: '15px', 
+                backgroundColor: '#f9f9f9', 
+                borderRadius: '8px',
+                borderLeft: '5px solid #d4a5a5'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    {appt.userName || "Unknown Customer"}
+                  </div>
+                  <div style={{ color: '#666' }}>
+                    {new Date(appt.appointmentTime).toLocaleString([], { 
+                        weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                    })}
+                  </div>
                 </div>
+                
+                <button 
+                  onClick={() => handleDelete(appt.userId, appt.appointmentTime)}
+                  style={{
+                    backgroundColor: '#ff4d4d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 15px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             ))
           )}

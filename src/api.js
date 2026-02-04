@@ -1,17 +1,22 @@
 console.log('API URL:', process.env.REACT_APP_API_URL);
 const API_URL = process.env.REACT_APP_API_URL;
 
-export async function createAppointment(appointmentTime) {
+export async function createAppointment(appointmentData) {
     const token = localStorage.getItem('id_token');
     const response = await fetch(`${API_URL}/appointments`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : ''
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ appointmentTime })
+        body: JSON.stringify(appointmentData)
     });
-    return await response.json();
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || "Booking failed");
+    }
+    return data;
 }
 
 export async function getAppointments() {
@@ -35,9 +40,30 @@ export async function getAllAppointments() {
     const token = localStorage.getItem('id_token');
     const response = await fetch(`${API_URL}/admin/all-appointments`, {
         headers: {
-            Authorization: token ? `Bearer ${token}` : ''
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         }
     });
-    if (!response.ok) throw new Error("Failed to fetch all appointments");
+    if (!response.ok) throw new Error("Failed to fetch schedule");
+    return response.json();
+}
+
+export async function getPublicAvailability() {
+    const response = await fetch(`${API_URL}/availability`);
+    if (!response.ok) throw new Error("Could not load availability");
+    return response.json();
+}
+
+export async function deleteAppointment(userId, appointmentTime) {
+    const token = localStorage.getItem('id_token');
+    const response = await fetch(`${API_URL}/admin/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, appointmentTime })
+    });
+    if (!response.ok) throw new Error("Failed to delete");
     return response.json();
 }

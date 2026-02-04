@@ -28,7 +28,7 @@ const App = () => {
             setAppointments(data.appointments || []);
           } catch (err) {
             if (err.message === "UNAUTHORIZED") {
-              setLoggedIn(false); // Force back to login screen
+              setLoggedIn(false);
             } else {
               console.error("Failed to load appointments:", err);
             }
@@ -89,7 +89,7 @@ const App = () => {
               <div className="admin-page">
                 <h1>Admin Dashboard 👑</h1>
                 <p>All client appointments across the salon appear here.</p>
-                <AdminDashboard /> {/* <--- Add the component here */}
+                <AdminDashboard />
               </div>
             } />
           )}
