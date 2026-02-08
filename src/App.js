@@ -70,7 +70,7 @@ const App = () => {
           <Route path="/" element={
             <div className="home-page">
               {/* Added the dynamic name greeting here */}
-              <h1>Welcome to the Nail Salon{userName ? `, ${userName}` : ''} 🌺</h1>
+              <h1>Welcome to the Nail Salon{userName ? `, ${userName}` : ''}</h1>
               <p>Experience the magic of beautiful nails.</p>
               <Link to="/schedule"><button className="primary-button">Start Booking</button></Link>
             </div>
