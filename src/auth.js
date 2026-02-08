@@ -38,10 +38,7 @@ export const handleRedirect = async () => {
       const data = await res.json();
 
       if (data.id_token) {
-        // This is the long JWT string starting with "eyJ..."
         localStorage.setItem('id_token', data.id_token);
-        
-        // Optional: Store access_token if you need it later
         if (data.access_token) {
           localStorage.setItem('access_token', data.access_token);
         }
@@ -77,3 +74,16 @@ export const getUserGroups = () => {
 };
 
 export const isAdmin = () => getUserGroups().includes('admin');
+
+export const getUserName = () => {
+  const token = localStorage.getItem('id_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Cognito usually stores it in 'given_name' or 'name' 
+    // depending on your User Pool settings
+    return payload.given_name || payload.name || payload.email;
+  } catch (e) {
+    return null;
+  }
+};

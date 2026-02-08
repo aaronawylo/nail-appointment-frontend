@@ -16,11 +16,11 @@ const NailGallery = () => {
 
   return (
     <div className="gallery-container">
-      <h2>Our Masterpieces ✨</h2>
+      <h2>Our Masterpieces</h2>
       {loading ? <p>Polishing the photos...</p> : (
         <div className="gallery-grid">
           {images.length === 0 ? (
-            <p>No photos yet. Check back soon! 🌸</p>
+            <p>No photos yet. Check back soon!</p>
           ) : (
             images.map((img) => (
               <div key={img.key} className="gallery-card">

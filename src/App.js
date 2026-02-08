@@ -4,7 +4,7 @@ import AppointmentForm from './components/AppointmentForm';
 import MyAppointments from './components/MyAppointments'; // Updated component
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
-import { handleRedirect, isAuthenticated, isAdmin } from './auth';
+import { handleRedirect, isAuthenticated, isAdmin, getUserName } from './auth'; // Added getUserName
 import { getAppointments } from './api';
 import NailGallery from './components/NailGallery';
 import './styles.css';
@@ -13,6 +13,7 @@ const App = () => {
   const [appointments, setAppointments] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [userName, setUserName] = useState(""); // New state for the name
 
   useEffect(() => {
     const initAuth = async () => {
@@ -22,6 +23,7 @@ const App = () => {
         try {
           setLoggedIn(true);
           setUserIsAdmin(isAdmin());
+          setUserName(getUserName()); // Set the name from the token
           
           const data = await getAppointments();
           setAppointments(data.appointments || []);
@@ -41,8 +43,10 @@ const App = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('id_token');
+    localStorage.removeItem('access_token');
     setLoggedIn(false);
     setUserIsAdmin(false);
+    setUserName("");
     window.location.href = "/";
   };
 
@@ -50,14 +54,13 @@ const App = () => {
     <Router>
       <div className="app-container">
         <nav className="navbar">
-          <div className="nav-logo">🌸 Nail Magic</div>
+          <div className="nav-logo">Nail Salon</div>
           <div className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/gallery" className="nav-link">Gallery</Link>
             <Link to="/schedule" className="nav-link">Book Now</Link>
-            {/* Swapped AppointmentList for the new MyAppointments */}
             <Link to="/my-appointments" className="nav-link">My Bookings</Link>
-            {userIsAdmin && <Link to="/admin" className="nav-link admin-link">Admin 👑</Link>}
+            {userIsAdmin && <Link to="/admin" className="nav-link admin-link">Admin</Link>}
             
             <button onClick={handleLogout} className="logout-button">Logout</button>
           </div>
@@ -66,7 +69,8 @@ const App = () => {
         <Routes>
           <Route path="/" element={
             <div className="home-page">
-              <h1>Welcome to the Salon 🌺</h1>
+              {/* Added the dynamic name greeting here */}
+              <h1>Welcome to the Nail Salon{userName ? `, ${userName}` : ''} 🌺</h1>
               <p>Experience the magic of beautiful nails.</p>
               <Link to="/schedule"><button className="primary-button">Start Booking</button></Link>
             </div>
@@ -76,12 +80,10 @@ const App = () => {
 
           <Route path="/schedule" element={
             <AppointmentForm onNewAppointment={() => {
-              // Refresh data when a new booking is made
               getAppointments().then(data => setAppointments(data.appointments || []));
             }} />
           } />
 
-          {/* Using the new component that handles its own fetching/formatting */}
           <Route path="/my-appointments" element={<MyAppointments />} />
 
           {userIsAdmin && (
